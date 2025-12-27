@@ -1,0 +1,12 @@
+# Python files
+__pycache__/
+.pytest_cache/
+venv/
+
+# Meet results
+data/meetData/manual_times.cl2
+data/meetData/pacswim/*
+data/meetData/pacswim-zip/*
+
+# MacOS metadata files
+*.DS_Store
