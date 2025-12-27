@@ -7,12 +7,43 @@ import datetime
 import sys
 import os
 
-# Add tunas package to Python path
-# The tunas code uses relative imports (e.g., "import database"), so we need to add
-# tunas/tunas/ directly to sys.path so these imports resolve correctly
-_tunas_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../tunas/tunas"))
-if _tunas_dir not in sys.path:
-    sys.path.insert(0, _tunas_dir)
+def _setup_tunas_path():
+    """
+    Add tunas package to Python path.
+    Tries multiple possible paths to handle different deployment scenarios.
+    """
+    # List of possible paths to try (relative to this file)
+    possible_paths = [
+        # Standard development path: backend/services -> project_root/tunas/tunas
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../tunas/tunas")),
+        # Railway/deployment path: might be at root level
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../tunas/tunas")),
+        # Alternative: if backend is the root
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../tunas/tunas")),
+        # Absolute path fallback: try from current working directory
+        os.path.join(os.getcwd(), "tunas", "tunas"),
+        # Try from project root if we can find it
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "tunas", "tunas"),
+    ]
+    
+    for tunas_dir in possible_paths:
+        tunas_dir = os.path.abspath(tunas_dir)
+        parser_path = os.path.join(tunas_dir, "parser.py")
+        if os.path.exists(parser_path):
+            if tunas_dir not in sys.path:
+                sys.path.insert(0, tunas_dir)
+            return tunas_dir
+    
+    # If we get here, none of the paths worked
+    raise ImportError(
+        f"Could not find tunas package. Tried paths:\n" +
+        "\n".join(f"  - {os.path.abspath(p)}" for p in possible_paths) +
+        f"\n\nCurrent working directory: {os.getcwd()}\n" +
+        f"Current file location: {os.path.dirname(__file__)}"
+    )
+
+# Setup tunas path before importing
+_setup_tunas_path()
 
 from database import Database, swim, sdif, dutil, timestandard
 import relaygen
